@@ -1,0 +1,392 @@
+/* Ajuste en la anchura del contenedor principal */
+/* Contenedor principal centrado */
+body {
+  display: flex;
+  justify-content: center;  
+  align-items: center;      
+  height: 100vh;            
+  margin: 0;                
+}
+
+.library-container {
+  max-width: 100%;  /* Reduce el tamaño al 50% del ancho de la pantalla */
+  margin: 0 auto;  /* Centrado horizontal */
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+ 
+}
+
+/* Header Styles */
+.header {
+  background: white;
+  border-radius: 0.5rem;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  padding: 1rem;
+ 
+}
+
+.header-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.logo-section {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.logo {
+  width: 2rem;
+  height: 2rem;
+  background-color: #2563eb;
+  border-radius: 0.5rem;
+}
+
+.branch-buttons {
+  display: flex;
+  gap: 1rem;
+}
+
+.branch-button {
+  padding: 0.25rem 0.75rem;
+  border: none;
+  border-radius: 0.25rem;
+  background: none;
+  color: #666;
+  cursor: pointer;
+}
+
+.branch-button.active {
+  background-color: #2563eb;
+  color: white;
+}
+
+/* Navigation Styles */
+.navigation {
+  background: white;
+  border-radius: 0.5rem;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  padding: 1rem;
+}
+
+.nav-content {
+  display: flex;
+  gap: 1.5rem;
+}
+
+.nav-button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  border: none;
+  background: none;
+  color: #666;
+  cursor: pointer;
+}
+
+.nav-button:hover {
+  color: #2563eb;
+}
+
+/* Book Management Section Styles */
+.management-section {
+  background: white;
+  border-radius: 0.5rem;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  padding: 1rem;
+}
+
+.management-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.search-section {
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end; /* Alinea a la derecha */
+  align-items: center;
+  margin-bottom: 30px;
+}
+
+.search-box {
+  position: relative;
+}
+
+.search-box input {
+  padding: 0.75rem 0.75rem 0.75rem 2rem; /* Aumenta el tamaño del input */
+  border: 1px solid #ddd;
+  border-radius: 0.5rem;
+  width: 300px; /* Ajusta el ancho del input */
+}
+
+.search-icon {
+  position: absolute;
+  left: 0.75rem; /* Alineación del icono */
+  top: 50%;
+  transform: translateY(-50%);
+  color: #666;
+}
+/* botones de agregar*/ 
+.new-book-button {
+  background-color: #2563eb;
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem; /* Aumenta el tamaño del botón */
+  border-radius: 0.5rem;
+  cursor: pointer;
+  font-size: 1rem; /* Aumenta el tamaño del texto */
+}
+
+.new-book-button:hover {
+  background-color: darkblue;
+}
+
+/* Table Styles */
+.table-container {
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th, td {
+  padding: 0.5rem 1rem;
+  text-align: left;
+  border-bottom: 1px solid #ddd;
+}
+
+th {
+  font-weight: 600;
+}
+
+tr:hover {
+  background-color: #f9fafb;
+}
+
+.status-badge {
+  background-color: #dcfce7;
+  color: #166534;
+  padding: 0.25rem 0.5rem;
+  border-radius: 9999px;
+  font-size: 0.875rem;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.action-button {
+  border: none;
+  background: none;
+  color: #2563eb;
+  cursor: pointer;
+}
+
+.action-button:hover {
+  color: #1d4ed8;
+}
+
+/* boton del proveedor*/
+.new-provider-button {
+  background-color: #2563eb;
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem; /* Aumenta el tamaño del botón */
+  border-radius: 0.5rem;
+  cursor: pointer;
+  font-size: 1rem; /* Aumenta el tamaño del texto */
+}
+
+.new-provider-button:hover {
+  background-color: darkblue;
+}
+
+/* Estilos para el modal */
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background-color: white;
+  padding: 20px;
+  border-radius: 8px;
+  max-width: 500px;
+  width: 100%;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  position: relative;
+}
+
+.modal-content h3 {
+  text-align: center;
+  font-size: 24px;
+  margin-bottom: 20px;
+}
+
+.modal-content form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.modal-content input {
+  width: 90%;
+  padding: 8px;
+  margin: 10px 0;
+  border: 2px solid #ccc;
+  border-radius: 5px;
+  transform: translateX(2%);
+}
+
+/* Botones dentro del modal */
+.modal-content button {
+  padding: 10px 15px;
+  margin: 25px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+  transform: translateX(90px);
+}
+
+
+.modal-content button:first-of-type {
+  background-color: #28a745;
+  color: white;
+}
+
+.modal-content button:first-of-type:hover {
+  background-color: #218838;
+}
+
+.modal-content button:last-of-type {
+  background-color: #dc3545;
+  color: white;
+}
+
+.modal-content button:last-of-type:hover {
+  background-color: #c82333;
+}
+
+
+/* Animación de aparición del modal */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+/* Estilo del mensaje de alerta */
+.alert {
+  padding: 10px;
+  margin-bottom: 15px;
+  border-radius: 4px;
+  font-size: 16px;
+}
+
+.alert-success {
+  background-color: #d4edda;
+  color: #155724;
+}
+.alert-error {
+  background-color: #f8d7da;
+  color: #721c24;
+}
+
+/* Estilos para el botón en el modal */
+button {
+  background-color: #2563eb;
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem; /* Aumenta el tamaño del botón */
+  border-radius: 0.5rem;
+  cursor: pointer;
+  font-size: 1rem; /* Aumenta el tamaño del texto */
+}
+
+/* Hover */
+button:hover {
+  background-color: darkblue;
+}
+/* Focus */
+button:focus {
+  outline: none; /* Elimina el borde azul predeterminado en algunos navegadores */
+  box-shadow: 0 0 5px rgba(72, 161, 72, 0.7); /* Agrega un pequeño resplandor verde */
+}
+
+/* Estilos para el modal (si no lo tienes) */
+.modal {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 9999;
+}
+
+/* Contenedor del modal */
+.modal-content {
+  background-color: white;
+  padding: 20px;
+  border-radius: 10px;
+  width: 400px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+}
+
+
+.delete-button {
+  background: none; /* Sin fondo */
+  border: none; /* Sin borde */
+  cursor: pointer; /* Cambia el cursor a puntero */
+  padding: 5px; /* Añade algo de espacio alrededor del ícono */
+  border-radius: 50%; /* Redondea el botón */
+  transition: background-color 0.3s ease, transform 0.2s ease; /* Animaciones suaves */
+}
+
+.delete-button:hover {
+  background-color: #ffe5e5; /* Fondo rojo claro al pasar el mouse */
+  transform: scale(1.1); /* Escala el ícono ligeramente */
+}
+
+.delete-button:active {
+  transform: scale(0.9); /* Reduce el tamaño al hacer clic */
+}
+
+.delete-button svg {
+  stroke-width: 2.5; /* Ajusta el grosor del ícono */
+  color: #ff4d4f; /* Rojo predeterminado para el ícono */
+  transition: color 0.3s ease; /* Animación para el color */
+}
+
+.delete-button:hover svg {
+  color: #e60000; /* Cambia a un rojo más intenso al pasar el mouse */
+}
+
+
+
