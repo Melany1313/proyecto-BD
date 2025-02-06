@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import  { useEffect, useState } from "react";
 import axios from "axios";
 import { Trash2 } from "lucide-react"; // Importa el icono de la papelera
 import { eliminarEmpleado } from "../../Api/Api";

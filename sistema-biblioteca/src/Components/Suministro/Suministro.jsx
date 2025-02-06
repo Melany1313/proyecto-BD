@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import  { useEffect, useState } from "react";
 import axios from "axios";
 
 const TablaSuministro = () => {
@@ -37,7 +37,7 @@ const TablaSuministro = () => {
               <td>{suministro.id_sucursal}</td>
               <td>{suministro.isbn}</td>
               <td>{suministro.cantidad}</td>
-              <td>{new Date(suministro.fecha_suministro).toLocaleDateString()}</td>
+              <td>{new Date(suministro.fechaSuministro).toLocaleDateString()}</td>
             </tr>
           ))}
         </tbody>
