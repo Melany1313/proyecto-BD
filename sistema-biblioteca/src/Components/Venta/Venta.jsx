@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import  { useEffect, useState } from "react";
 import axios from "axios";
 import { format } from 'date-fns'; // Para formatear la fecha
 import { Trash2 } from "lucide-react"; // Importa el icono de la papelera
@@ -65,7 +65,6 @@ const TablaVentas = () => {
             ventas.map((venta) => (
               <tr key={venta.id_venta}>
                 <td>{venta.id_venta}</td>
-                {/* Formateamos la fecha */}
                 <td>{format(new Date(venta.fechaVenta), 'dd/MM/yyyy HH:mm')}</td>
                 <td>{venta.id_empleado}</td>
                 <td>{venta.id_cliente}</td>

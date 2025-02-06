@@ -12,19 +12,16 @@ app.use(express.urlencoded({ extended: true }));
 
 // Configuración actualizada para SQL Server
 const dbConfig = {
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    server: process.env.DB_SERVER, // MELANY13\MSSQLSERVERMELAQ
-    database: process.env.DB_NAME,
+    user: process.env.DB_USER,           // Usuario
+    password: process.env.DB_PASSWORD,   // Contraseña
+    server: process.env.DB_SERVER.split("\\")[0],  // Nombre del servidor (sin instancia)
+    database: process.env.DB_NAME,       // Base de datos
     options: {
-      encrypt: false,
-      trustServerCertificate: true,
-      enableArithAbort: true,
-      instanceName: 'MSSQLSERVERMELAQ'
+        encrypt: false,                // Desactiva el cifrado (puedes ponerlo a true si lo necesitas)
+        trustServerCertificate: true,  // Evitar problemas con certificados en desarrollo
+        enableArithAbort: true,        // Habilitar abortos aritméticos en caso de errores
     }
-  };
-  
-
+};
 // Mejorar el manejo de la conexión
 const connectDB = async () => {
     try {
@@ -46,38 +43,50 @@ const connectDB = async () => {
 connectDB();
 
 
-
+//LIBRO-----------------------------------------------------
 // Ruta para obtener todos los libros desde la base de datos
 app.get('/api/libros', async (req, res) => {
-    try {
-      const result = await sql.query`SELECT * FROM Libro`;  // Asegúrate de que la tabla se llama "Libro" en la base de datos
-      res.json(result.recordset);  // Devuelve los libros como respuesta
-    } catch (err) {
-      res.status(500).send(err.message);  // Maneja errores
-    }
-  });
+  try {
+    const result = await sql.query`SELECT * FROM Libro`;  // Asegúrate de que la tabla se llama "Libro" en la base de datos
+    res.json(result.recordset);  // Devuelve los libros como respuesta
+  } catch (err) {
+    res.status(500).json({ error: "Error al obtener los libros", details: err.message });  // Mejor manejo de errores
+  }
+});
+
   
-  app.post('/api/libros', async (req, res) => {
-    const { isbn, titulo, autor, precio } = req.body;
-  
-    try {
-      // Conexión con el pool de SQL Server
-      const pool = await sql.connect(dbConfig);
-  
-      // Insertar libro en la base de datos
-      await pool.request()
-        .input('isbn', sql.NVarChar, isbn)  // Asegúrate de usar el tipo de dato adecuado
-        .input('titulo', sql.NVarChar, titulo)
-        .input('autor', sql.NVarChar, autor)
-        .input('precio', sql.Float, precio)
-        .query('INSERT INTO Libro (isbn, titulo, autor, precio) VALUES (@isbn, @titulo, @autor, @precio)');
-      
-      res.status(201).json({ message: 'Libro agregado correctamente' });
-    } catch (error) {
-      console.error('Error al agregar libro:', error);
-      res.status(500).json({ error: 'Error al agregar libro' });
-    }
-  });
+app.post('/api/libros', async (req, res) => {
+  const { isbn, titulo, autor, precio } = req.body;
+
+  // Validación de los datos
+  if (!isbn || !titulo || !autor || !precio) {
+    return res.status(400).json({ error: 'Todos los campos son obligatorios' });
+  }
+
+  // Asegúrate de que el ISBN tenga el formato correcto
+  const isbnPattern = /^[0-9]{13}$/;  // ISBN de 13 dígitos numéricos
+  if (!isbnPattern.test(isbn)) {
+    return res.status(400).json({ error: 'El ISBN debe ser de 13 dígitos numéricos' });
+  }
+
+  try {
+    const pool = await sql.connect(dbConfig);
+
+    // Insertar libro en la base de datos
+    await pool.request()
+      .input('isbn', sql.NVarChar, isbn)
+      .input('titulo', sql.NVarChar, titulo)
+      .input('autor', sql.NVarChar, autor)
+      .input('precio', sql.Decimal(10, 2), precio)  // Usar Decimal para coincidir con el tipo de la base de datos
+      .query('INSERT INTO Libro (isbn, titulo, autor, precio) VALUES (@isbn, @titulo, @autor, @precio)');
+    
+    res.status(201).json({ message: 'Libro agregado correctamente' });
+  } catch (error) {
+    console.error('Error al agregar libro:', error);
+    res.status(500).json({ error: 'Error al agregar libro' });
+  }
+});
+
 
 
   // Ruta para eliminar un libro
@@ -88,7 +97,7 @@ app.get('/api/libros', async (req, res) => {
       const pool = await sql.connect(dbConfig);
       const result = await pool.request()
         .input('isbn', sql.NVarChar, isbn)
-        .query('DELETE FROM Libro WHERE isbn = @isbn');  // Verifica que el nombre de la tabla y columna sean correctos
+        .query('DELETE FROM Libro WHERE isbn = @isbn');
   
       if (result.rowsAffected[0] === 0) {
         return res.status(404).json({ error: 'Libro no encontrado' });
@@ -106,10 +115,11 @@ app.get('/api/libros', async (req, res) => {
   
   
 
-// RUTAS PARA CLIENTES
+// RUTAS PARA CLIENTES-----------------------------------------
+
 app.get('/api/clientes', async (req, res) => {
   try {
-    const result = await sql.query`SELECT * FROM Cliente_Quito`;
+    const result = await sql.query`SELECT * FROM Cliente`;
     res.json(result.recordset);
   } catch (err) {
     res.status(500).send(err.message);
@@ -117,46 +127,43 @@ app.get('/api/clientes', async (req, res) => {
 });
 
 
-app.post('/api/clientes', async (req, res) => {
-  // Validate required fields
+
+app.post('/clientes', (req, res) => {
   const { id_sucursal, nombre, telefono } = req.body;
-
-  // Check for missing or invalid required fields
-  if (!id_sucursal || id_sucursal <= 0) {
-      return res.status(400).json({ error: 'ID de sucursal es requerido y debe ser un número positivo' });
+  
+  if (!id_sucursal || !nombre || !telefono) {
+    return res.status(400).json({ message: 'Faltan datos requeridos' });
   }
 
-  if (!nombre || nombre.trim() === '') {
-      return res.status(400).json({ error: 'Nombre es requerido' });
-  }
-
-  try {
-      const pool = await sql.connect(dbConfig);
-      await pool.request()
-          .input('id_sucursal', sql.Int, id_sucursal)
-          .input('nombre', sql.NVarChar, nombre.trim())
-          .input('telefono', sql.NVarChar, telefono ? telefono.trim() : null)
-          .query('INSERT INTO Cliente_Quito (id_sucursal, Nombre, Telefono) VALUES (@id_sucursal, @nombre, @telefono)');
-
-      res.status(201).json({ message: 'Cliente agregado exitosamente' });
-  } catch (error) {
-      console.error('Error al agregar cliente:', error);
-      res.status(500).json({ error: 'Error interno del servidor al agregar cliente', details: error.message });
-  }
+  const query = 'INSERT INTO cliente (id_sucursal, nombre, telefono) VALUES (?, ?, ?)';
+  db.query(query, [id_sucursal, nombre, telefono], (err, result) => {
+    if (err) {
+      console.log("Error al insertar el cliente:", err);
+      return res.status(500).json({ message: 'Error al agregar el cliente' });
+    }
+    
+    console.log("Cliente agregado con éxito:", result);
+    return res.status(201).json({ message: 'Cliente agregado con éxito', cliente: { id_sucursal, nombre, telefono } });
+  });
 });
+
 
 app.delete('/api/clientes/:id', async (req, res) => {
   const { id } = req.params;
 
-  if (!id || isNaN(id)) {
-    return res.status(400).json({ error: 'ID de cliente inválido' });
+  // Validar que el ID sea una cadena de 4 caracteres
+  if (!id || id.length !== 4) {
+    return res.status(400).json({ error: 'ID de cliente inválido. Debe ser una cadena de 4 caracteres.' });
   }
 
   try {
     const pool = await sql.connect(dbConfig);
+    // Determina la tabla donde eliminar según el ID de la sucursal
+    const tablaDestino = id.startsWith("Q") ? "Cliente_Quito" : "Cliente_Cuenca"; // Usa "Q" para Quito y "C" para Cuenca
+
     const result = await pool.request()
-      .input('id_cliente', sql.Int, id)
-      .query('DELETE FROM Cliente_Quito WHERE id_cliente = @id_cliente');
+      .input('id_cliente', sql.Char(4), id) // Asegúrate de usar Char(4) para el id_cliente
+      .query(`DELETE FROM ${tablaDestino} WHERE id_cliente = @id_cliente`);
 
     if (result.rowsAffected[0] > 0) {
       res.json({ message: 'Cliente eliminado correctamente' });
@@ -172,41 +179,31 @@ app.delete('/api/clientes/:id', async (req, res) => {
 
 
 
-// RUTAS PARA SUCURSALES
+// RUTAS PARA SUCURSALES--------------------------------------------------------------------
 app.get('/api/sucursales', async (req, res) => {
   try {
-    const result = await sql.query`SELECT * FROM Sucursal_Quito`;
+    const result = await sql.query`SELECT * FROM Sucursal`;
     res.json(result.recordset);
   } catch (err) {
     res.status(500).send(err.message);
   }
 });
 
-app.post('/api/sucursales', async (req, res) => {
-  try {
-    const { id_sucursal, nombre, ubicacion } = req.body;
-    await sql.query`
-      INSERT INTO Sucursal_Quito (id_sucursal, nombre, ubicacion)
-      VALUES (${id_sucursal}, ${nombre}, ${ubicacion})`;
-    res.json({ message: 'Sucursal agregada exitosamente' });
-  } catch (err) {
-    res.status(500).send(err.message);
-  }
-});
 
 
+//EMPLEADOS-----------------------------------------------------------------------------
 // Ruta para obtener los empleados con salario
 app.get('/api/empleados', async (req, res) => {
   try {
-    // Consulta combinada entre las tablas 'Empleado_Quito' y 'Nomina_empleado_Quito'
+    // Consulta combinada entre las tablas 'Empleado' y 'NominaEmpleado'
     const result = await sql.query(`
       SELECT 
         e.id_empleado, 
         e.nombre, 
         e.id_sucursal, 
         n.salario
-      FROM Empleado_Quito e
-      JOIN Nomina_empleado_Quito n 
+      FROM Empleado e
+      JOIN NominaEmpleado n 
         ON e.id_empleado = n.id_empleado
     `);
 
@@ -239,7 +236,7 @@ app.post('/api/empleados', async (req, res) => {
       .input("nombre", sql.VarChar, nombre)
       .input("id_sucursal", sql.Int, id_sucursal)
       .query(`
-        INSERT INTO Empleado_Quito (nombre, id_sucursal)
+        INSERT INTO Empleado (nombre, id_sucursal)
         OUTPUT INSERTED.id_empleado
         VALUES (@nombre, @id_sucursal);
       `);
@@ -251,7 +248,7 @@ app.post('/api/empleados', async (req, res) => {
       .input("id_empleado", sql.Int, id_empleado)
       .input("salario", sql.Decimal, salario)
       .query(`
-        INSERT INTO Nomina_empleado_Quito (id_empleado, salario)
+        INSERT INTO NominaEmpleado (id_empleado, salario)
         VALUES (@id_empleado, @salario);
       `);
 
@@ -273,12 +270,12 @@ app.delete('/api/empleados/:id', async (req, res) => {
     // Eliminar el salario del empleado en la tabla 'Nomina_empleado_Quito'
     await pool.request()
       .input('id', sql.Int, id)
-      .query('DELETE FROM Nomina_empleado_Quito WHERE id_empleado = @id');
+      .query('DELETE FROM NominaEmpleado WHERE id_empleado = @id');
 
     // Eliminar el empleado de la tabla 'Empleado_Quito'
     const result = await pool.request()
       .input('id', sql.Int, id)
-      .query('DELETE FROM Empleado_Quito WHERE id_empleado = @id');
+      .query('DELETE FROM Empleado WHERE id_empleado = @id');
 
     // Si no se afectó ninguna fila, es porque no se encontró el empleado
     if (result.rowsAffected[0] === 0) {
@@ -295,11 +292,13 @@ app.delete('/api/empleados/:id', async (req, res) => {
 
 
 
-// RUTAS PARA VENTAS
+// RUTAS PARA VENTAS--------------------------------------------------------------------------
 
+// Ruta para obtener las ventas con los detalles de los libros vendidos
 app.get('/api/ventas', async (req, res) => {
   try {
-    const result = await sql.query`
+    const pool = await sql.connect(dbConfig);
+    const result = await pool.request().query(`
       SELECT 
         v.id_venta,
         v.fechaVenta,
@@ -310,14 +309,15 @@ app.get('/api/ventas', async (req, res) => {
         vl.cantidad,
         vl.precioUnitario,
         vl.subtotal
-      FROM Venta_Quito v
-      JOIN VentaLibro_Quito vl ON v.id_venta = vl.id_venta
-    `;
+      FROM Venta v
+      JOIN DetalleVenta vl ON v.id_venta = vl.id_venta
+    `);
     res.json(result.recordset);
   } catch (err) {
     res.status(500).send(err.message);
   }
 });
+
 
 
 
@@ -354,7 +354,7 @@ app.post('/api/ventas', async (req, res) => {
         .input('id_cliente', sql.Int, parseInt(id_cliente))
         .input('total', sql.Float, parseFloat(total))
         .query(`
-          INSERT INTO Venta_Quito (fechaVenta, id_empleado, id_cliente, total)
+          INSERT INTO Venta (fechaVenta, id_empleado, id_cliente, total)
           OUTPUT INSERTED.id_venta
           VALUES (@fechaVenta, @id_empleado, @id_cliente, @total);
         `);
@@ -368,7 +368,7 @@ app.post('/api/ventas', async (req, res) => {
         .input('precioUnitario', sql.Float, parseFloat(precioUnitario))
         .input('subtotal', sql.Float, parseFloat(subtotal))
         .query(`
-          INSERT INTO VentaLibro_Quito (id_venta, isbn, cantidad, precioUnitario, subtotal)
+          INSERT INTO Venta (id_venta, isbn, cantidad, precioUnitario, subtotal)
           VALUES (@idVenta, @isbn, @cantidad, @precioUnitario, @subtotal);
         `);
 
@@ -396,18 +396,18 @@ app.delete('/api/ventas/:id', async (req, res) => {
     await transaction.begin();
 
     try {
-      // Eliminar los registros relacionados en VentaLibro_Quito
+      // Eliminar los registros relacionados en VentaLibro
       await transaction.request()
         .input('idVenta', sql.Int, parseInt(id))
         .query(`
-          DELETE FROM VentaLibro_Quito WHERE id_venta = @idVenta;
+          DELETE FROM Venta WHERE id_venta = @idVenta;
         `);
 
-      // Eliminar la venta en la tabla Venta_Quito
+      // Eliminar la venta en la tabla Venta
       await transaction.request()
         .input('idVenta', sql.Int, parseInt(id))
         .query(`
-          DELETE FROM Venta_Quito WHERE id_venta = @idVenta;
+          DELETE FROM Venta WHERE id_venta = @idVenta;
         `);
 
       await transaction.commit();
@@ -425,26 +425,35 @@ app.delete('/api/ventas/:id', async (req, res) => {
 
 
 
-
-
-// RUTAS PARA STOCK
+// RUTAS PARA STOCK-------------------------------------------------------------------------
 // Ruta para obtener el stock
 app.get('/api/stock', async (req, res) => {
   try {
-    const result = await sql.query`SELECT * FROM Stock_Quito`; // Asegúrate de que la tabla se llame correctamente
+    const result = await sql.query`SELECT * FROM StockSucursal`;// Asegúrate de que la tabla se llame correctamente
     res.json(result.recordset);
   } catch (err) {
     res.status(500).send(err.message);
   }
 });
 
+
 // Ruta para eliminar un registro de stock
 app.delete('/api/stock/:id_sucursal/:isbn', async (req, res) => {
   const { id_sucursal, isbn } = req.params;
 
   try {
+    // Validación: Verificar si el stock existe
+    const checkStock = await sql.query`
+      SELECT * FROM StockSucursal
+      WHERE id_sucursal = ${id_sucursal} AND isbn = ${isbn}`;
+    
+    if (checkStock.recordset.length === 0) {
+      return res.status(404).json({ message: 'El stock no existe para la sucursal y ISBN proporcionados' });
+    }
+
+    // Eliminar el stock si existe
     await sql.query`
-      DELETE FROM Stock 
+      DELETE FROM StockSucursal
       WHERE id_sucursal = ${id_sucursal} AND isbn = ${isbn}`;
     res.json({ message: 'Registro de stock eliminado exitosamente' });
   } catch (err) {
@@ -453,84 +462,90 @@ app.delete('/api/stock/:id_sucursal/:isbn', async (req, res) => {
 });
 
 
-// RUTAS PARA SUMINISTROS
+
+// RUTAS PARA SUMINISTROS-------------------------------------------------------------------
+
 // Ruta para obtener todos los registros de suministro
 app.get('/api/suministros', async (req, res) => {
   try {
-    const result = await sql.query`SELECT * FROM Suministro`; // Asegúrate de que la tabla se llame correctamente
-    res.json(result.recordset);
+    const result = await sql.query`SELECT * FROM SLP`; // Asegúrate de que la tabla se llame correctamente
+    res.json(result.recordset);  // Envío de la respuesta como JSON
   } catch (err) {
-    res.status(500).send(err.message);
+    res.status(500).send(err.message); // Manejo de errores en caso de fallo
   }
 });
 
 // Ruta para agregar un nuevo registro de suministro
 app.post('/api/suministros', async (req, res) => {
   try {
-    const { id_proveedor, id_sucursal, isbn, cantidad, fecha_suministro } = req.body;
+    const { id_proveedor, id_sucursal, isbn, cantidad, fechasuministro } = req.body;
     await sql.query`
-      INSERT INTO Suministro (id_proveedor, id_sucursal, isbn, cantidad, fecha_suministro)
-      VALUES (${id_proveedor}, ${id_sucursal}, ${isbn}, ${cantidad}, ${fecha_suministro})`;
+      INSERT INTO SLP (id_proveedor, id_sucursal, isbn, cantidad, fechasuministro)
+      VALUES (${id_proveedor}, ${id_sucursal}, ${isbn}, ${cantidad}, ${fechasuministro})`;
     res.json({ message: 'Suministro agregado exitosamente' });
   } catch (err) {
-    res.status(500).send(err.message);
+    res.status(500).send(err.message); // Manejo de errores en caso de fallo
   }
 });
 
 
-// RUTAS PARA PROVEEDORES
+// RUTAS PARA PROVEEDORES-------------------------------------------------------------------
+// Ruta para obtener todos los proveedores
 app.get('/api/proveedores', async (req, res) => {
   try {
-    const result = await sql.query`SELECT * FROM Proveedor`;
-    res.json(result.recordset);
+    const result = await sql.query`SELECT * FROM Proveedor`; // Realiza una consulta para obtener todos los proveedores
+    res.json(result.recordset); // Devuelve los proveedores en formato JSON
   } catch (err) {
-    res.status(500).send(err.message);
+    res.status(500).json({ error: "Error al obtener los proveedores", details: err.message }); // Manejo de errores
   }
 });
 
-// RUTA PARA PROVEEDORES
+// Ruta para agregar un nuevo proveedor
 app.post('/api/proveedores', async (req, res) => {
-  const {  nombre, contacto } = req.body;
-  
+  const { nombre, contacto } = req.body;
+
+  // Validación de los datos
+  if (!nombre || !contacto) {
+    return res.status(400).json({ error: 'Todos los campos son obligatorios' });
+  }
+
   try {
-    // Conexión con el pool de SQL Server
     const pool = await sql.connect(dbConfig);
 
     // Insertar proveedor en la base de datos
     await pool.request()
-       // Asegúrate de usar el tipo de dato adecuado
       .input('nombre', sql.NVarChar, nombre)
       .input('contacto', sql.NVarChar, contacto)
-      .query('INSERT INTO Proveedor ( Nombre, Contacto) VALUES (@nombre, @contacto)');
-
-    res.status(201).json({ message: 'Proveedor agregado exitosamente' });
+      .query('INSERT INTO Proveedor (Nombre, Contacto) VALUES (@nombre, @contacto)');
+    
+    res.status(201).json({ message: 'Proveedor agregado correctamente' });
   } catch (error) {
     console.error('Error al agregar proveedor:', error);
-    res.status(500).json({ error: 'Error al agregar proveedor' });
+    res.status(500).json({ error: 'Error al agregar proveedor', details: error.message });
   }
 });
 
+// Ruta para eliminar un proveedor
 app.delete('/api/proveedores/:id', async (req, res) => {
-  const { id } = req.params; // Obtener el ID del proveedor desde los parámetros de la URL
+  const { id } = req.params;
 
   try {
-    // Conexión con el pool de SQL Server
     const pool = await sql.connect(dbConfig);
 
-    // Eliminar el proveedor de la base de datos
+    // Eliminar proveedor de la base de datos
     const result = await pool.request()
-      .input('id', sql.Int, id) // Asegurar que el ID sea un entero
+      .input('id', sql.Int, id)
       .query('DELETE FROM Proveedor WHERE id_proveedor = @id');
 
-    // Verificar si se eliminó algún registro
-    if (result.rowsAffected[0] > 0) {
-      res.json({ message: 'Proveedor eliminado exitosamente' });
-    } else {
-      res.status(404).json({ error: 'Proveedor no encontrado' });
+    // Verificar si se eliminó el proveedor
+    if (result.rowsAffected[0] === 0) {
+      return res.status(404).json({ error: 'Proveedor no encontrado' });
     }
+
+    res.status(200).json({ message: 'Proveedor eliminado exitosamente' });
   } catch (error) {
     console.error('Error al eliminar proveedor:', error);
-    res.status(500).json({ error: 'Error al eliminar proveedor' });
+    res.status(500).json({ error: 'Error al eliminar proveedor', details: error.message });
   }
 });
 

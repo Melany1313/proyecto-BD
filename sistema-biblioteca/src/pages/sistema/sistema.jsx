@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import  { useState } from 'react';
 import './sistema.css';
 import TablaLibros from '../../Components/Libros/libros';
 import TablaClientes from '../../Components/Clientes/Cliente';
@@ -9,18 +9,17 @@ import TablaStock from '../../Components/Stock/Stock';
 import TablaSuministro from '../../Components/Suministro/Suministro';
 import TablaProveedor from '../../Components/Proveedor/Proveedor';
 import { handleAddLibros, handleAddClientes, handleAddEmpleados, handleAddProveedores, handleAddVentas } from '../../Api/Api';
-import { Trash2 } from "lucide-react"; // Importamos el icono de basurero
+
 
 const Sistema = () => {
   const [activeSection, setActiveSection] = useState('Libros');
-  const [searchQuery, setSearchQuery] = useState('');
+
   const [showBookModal, setShowBookModal] = useState(false);
   const [showClientModal, setShowClientModal] = useState(false);
   const [showEmployeeModal, setShowEmployeeModal] = useState(false);
   const [showProviderModal, setShowProviderModal] = useState(false);
   const [showSaleModal, setShowSaleModal] = useState(false);
-  const [successMessage, setSuccessMessage] = useState('');
-  const [errorMessage, setErrorMessage] = useState('');
+
   
   
   
@@ -31,16 +30,8 @@ const Sistema = () => {
   const [newEmployee, setNewEmployee] = useState({ nombre: '', idSucursal: '' ,salario: ''});
   const [newProvider, setNewProvider] = useState({nombre: '',contacto: '',telefono: ''});
   const [newSale, setNewSale] = useState({ fechaVenta: '', id_empleado: '', id_cliente: '', isbn: '', cantidad: '', precioUnitario: '', total: '' });
-  const [libros, setLibros] = useState([]); // Estado dinámico para libros
-  const [clientes, setClientes] = useState([]);
-  const [sucursales, setSucursales] = useState([]);
-  const [empleados, setEmpleados] = useState([]);
-  const [ventas, setVentas] = useState([]); 
-  const [stock, setStock] = useState([]);
-  const [suministros, setSuministros] = useState([]); 
-  const [proveedores, setProveedores] = useState([]);
-  const [message, setMessage] = useState({ text: '', type: '' });
-  const [isLoading, setIsLoading] = useState(false);
+  const [libros] = useState([]); // Estado dinámico para libros
+
   
 
   const handleSubmitBook = async () => {
@@ -203,7 +194,7 @@ const Sistema = () => {
           <div className="logo-section">
             <div className="logo"></div>
             <h1>LIBRERIA BIBLIOCÓSMICA</h1>
-            {successMessage && <div className="success-message">{successMessage}</div>}
+           
 
           </div>
           
